@@ -19,6 +19,8 @@ window.addEventListener('DOMContentLoaded', () => {
         actualizarTabla(lista);
         dibujarGraficoC1C2(lista);
         dibujarGraficoC3(lista);
+        document.getElementById('resultadosPanel').hidden = false;
+        document.getElementById('graficosPanel').hidden = false;
         //dibujarPie(lista);
 
         const ultimo = lista[lista.length - 1];
@@ -126,25 +128,6 @@ function validarCampos() {
 }
 
 // ===========================
-// MODO OSCURO
-// ===========================
-const switchDark = document.getElementById("darkModeSwitch");
-
-switchDark.addEventListener("change", () => {
-    document.body.classList.toggle("dark", switchDark.checked);
-    localStorage.setItem("modoOscuro", switchDark.checked ? "1" : "0");
-});
-
-// Cargar preferencia guardada
-window.addEventListener("DOMContentLoaded", () => {
-    const modo = localStorage.getItem("modoOscuro");
-    if (modo === "1") {
-        document.body.classList.add("dark");
-        switchDark.checked = true;
-    }
-});
-
-// ===========================
 // EXPORTAR A EXCEL
 // ===========================
 document.getElementById("btnExcel").addEventListener("click", () => {
@@ -152,76 +135,30 @@ document.getElementById("btnExcel").addEventListener("click", () => {
     const simulacion = obtenerUltimaSimulacion();
     if (!simulacion) return;
 
-    // 1. Crear un array limpio SOLO con los campos que queremos exportar
     const incluirAporteExterno = simulacion.some(m => m.aporteExterno !== 0);
-    const datos = simulacion.map(m => {
-        const fila = {
-            anio: m.anio,
-            mes: Utils.nombreMes(((m.mes - 1) % 12) + 1),
-            retiroMensual: m.retiroMensual
-        };
-
-        if (incluirAporteExterno) fila.aporteExterno = m.aporteExterno;
-
-        Object.assign(fila, {
-            c1Inicio: m.c1Inicio,
-            c1Fin: m.c1Fin,
-            c2Inicio: m.c2Inicio,
-            c2Fin: m.c2Fin,
-            c3Inicio: m.c3Inicio,
-            c3Fin: m.c3Fin,
-            rebalanceo2a1: m.rebalanceo2a1,
-            rebalanceo3a2: m.rebalanceo3a2
-        });
-
-        return fila;
-    });
-
-    // 2. Crear hoja desde datos puros
-    const ws = XLSX.utils.json_to_sheet(datos);
-
-    // 3. Columnas numéricas sin decimales
-    const columnasNumericas = [
-        "c1Inicio", "c1Fin",
-        "c2Inicio", "c2Fin",
-        "c3Inicio", "c3Fin",
-        "retiroMensual",
-        "rebalanceo2a1", "rebalanceo3a2"
-    ];
-    if (incluirAporteExterno) columnasNumericas.push("aporteExterno");
-
-    // 4. Aplicar formato SOLO a filas de datos (fila 1 en adelante)
-    Object.keys(ws).forEach(key => {
-        if (key[0] === '!') return; // metadatos
-
-        const celda = ws[key];
-        const pos = XLSX.utils.decode_cell(key);
-
-        // ❗ Saltar la fila 0 (cabecera)
-        if (pos.r === 0) {
-            celda.t = "s"; // asegurar texto
-            return;
-        }
-
-        const header = ws[XLSX.utils.encode_cell({ r: 0, c: pos.c })].v;
-
-        // Año y mes → texto
-        if (header === "anio" || header === "mes") {
-            celda.t = "s";
-            return;
-        }
-
-        // Columnas numéricas → entero sin decimales
-        if (columnasNumericas.includes(header)) {
-            celda.v = Math.round(Number(celda.v)); // entero puro
-            celda.t = "n";
-            celda.z = "#,##0;[Red]-#,##0"; // miles sin decimales + negativos en rojo
-        }
-    });
-
-    // 5. Exportar
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+
+    const wsParametros = XLSX.utils.aoa_to_sheet(obtenerParametrosExportacion());
+    wsParametros['!cols'] = [{ wch: 32 }, { wch: 24 }];
+    XLSX.utils.book_append_sheet(wb, wsParametros, "Parametros");
+
+    const wsResultados = XLSX.utils.json_to_sheet(
+        crearDatosResultados(simulacion, incluirAporteExterno)
+    );
+    formatearHojaResultados(wsResultados, incluirAporteExterno);
+    XLSX.utils.book_append_sheet(wb, wsResultados, "Resultados");
+
+    const datosGraficos = simulacion.map(m => ({
+        anio: m.anio,
+        mes: Utils.nombreMes(((m.mes - 1) % 12) + 1),
+        cubo1: m.c1Fin,
+        cubo2: m.c2Fin,
+        cubo3: m.c3Fin
+    }));
+    const wsGraficos = XLSX.utils.json_to_sheet(datosGraficos);
+    formatearColumnasNumericas(wsGraficos, ["cubo1", "cubo2", "cubo3"]);
+    XLSX.utils.book_append_sheet(wb, wsGraficos, "Datos graficos");
+
     XLSX.writeFile(wb, "simulacion_cubos.xlsx");
 });
 
@@ -285,17 +222,39 @@ document.getElementById("btnPDF").addEventListener("click", () => {
     if (!simulacion) return;
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: "landscape" });
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const parametros = obtenerParametrosExportacion();
 
-    doc.text("Simulación Tres Cubos - Resultados", 14, 14);
+    doc.setFontSize(18);
+    doc.text("Simulacion Tres Cubos - Estado completo", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Periodo: ${simulacion[0].anio} - ${simulacion[simulacion.length - 1].anio}`, 14, 22);
 
     doc.autoTable({
-        html: "#tablaResultados",
-        startY: 20,
+        head: [["Parametro", "Valor"]],
+        body: parametros,
+        startY: 29,
+        tableWidth: 130,
         styles: { fontSize: 8 },
+        headStyles: { fillColor: [77, 121, 255] }
+    });
+
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.text("Graficos de evolucion", 14, 15);
+    insertarGraficoEnPdf(doc, "graficoC1C2", 14, 24, 128);
+    insertarGraficoEnPdf(doc, "graficoC3", 154, 24, 128);
+
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.text("Tabla completa de resultados", 14, 15);
+    doc.autoTable({
+        html: "#tablaResultados",
+        startY: 22,
+        styles: { fontSize: 7 },
         headStyles: { fillColor: [77, 121, 255] },
         didParseCell: function (data) {
-            if (data.cell.raw && !isNaN(data.cell.raw)) {
+            if (data.section === "body" && data.cell.raw !== "" && !isNaN(data.cell.raw)) {
                 data.cell.text = formatearNumero(Number(data.cell.raw));
             }
         }
@@ -303,6 +262,98 @@ document.getElementById("btnPDF").addEventListener("click", () => {
 
     doc.save("simulacion_cubos.pdf");
 });
+
+function obtenerParametrosExportacion() {
+    const nombres = [
+        ["Ano inicial", "anioInicial"],
+        ["Cubo 1 inicial", "c1Inicial"],
+        ["Cubo 2 inicial", "c2Inicial"],
+        ["Cubo 3 inicial", "c3Inicial"],
+        ["Retiro mensual inicial", "retiro"],
+        ["Aporte externo mensual", "aporteExterno"],
+        ["Inflacion del aporte", "inflacionAporte"],
+        ["Inflacion anual", "inflacion"],
+        ["Rentabilidad Cubo 2", "rentabC2"],
+        ["Meses a cubrir", "mesesCubrir"],
+        ["Minimo Cubo 3", "minimoC3"],
+        ["Rentabilidades anuales Cubo 3", "rentabC3"]
+    ];
+
+    return nombres.map(([nombre, id]) => {
+        const elemento = document.getElementById(id);
+        let valor = elemento.value;
+        if (elemento.type === "checkbox") valor = elemento.checked ? "Si" : "No";
+        return [nombre, valor];
+    });
+}
+
+function crearDatosResultados(simulacion, incluirAporteExterno) {
+    return simulacion.map(m => {
+        const fila = {
+            anio: m.anio,
+            mes: Utils.nombreMes(((m.mes - 1) % 12) + 1),
+            retiroMensual: m.retiroMensual
+        };
+
+        if (incluirAporteExterno) fila.aporteExterno = m.aporteExterno;
+
+        Object.assign(fila, {
+            c1Inicio: m.c1Inicio,
+            c1Fin: m.c1Fin,
+            c2Inicio: m.c2Inicio,
+            c2Fin: m.c2Fin,
+            c3Inicio: m.c3Inicio,
+            c3Fin: m.c3Fin,
+            rebalanceo2a1: m.rebalanceo2a1,
+            rebalanceo3a2: m.rebalanceo3a2
+        });
+
+        return fila;
+    });
+}
+
+function formatearColumnasNumericas(hoja, columnasNumericas) {
+    Object.keys(hoja).forEach(key => {
+        if (key[0] === '!') return;
+
+        const celda = hoja[key];
+        const posicion = XLSX.utils.decode_cell(key);
+        if (posicion.r === 0) {
+            celda.t = "s";
+            return;
+        }
+
+        const encabezado = hoja[XLSX.utils.encode_cell({ r: 0, c: posicion.c })].v;
+        if (columnasNumericas.includes(encabezado)) {
+            celda.v = Math.round(Number(celda.v));
+            celda.t = "n";
+            celda.z = "#,##0;[Red]-#,##0";
+        }
+    });
+}
+
+function formatearHojaResultados(hoja, incluirAporteExterno) {
+    const columnasNumericas = [
+        "c1Inicio", "c1Fin", "c2Inicio", "c2Fin", "c3Inicio", "c3Fin",
+        "retiroMensual", "rebalanceo2a1", "rebalanceo3a2"
+    ];
+    if (incluirAporteExterno) columnasNumericas.push("aporteExterno");
+
+    formatearColumnasNumericas(hoja, columnasNumericas);
+    hoja['!cols'] = [
+        { wch: 10 }, { wch: 14 }, { wch: 16 },
+        ...(incluirAporteExterno ? [{ wch: 16 }] : []),
+        { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+        { wch: 14 }, { wch: 14 }, { wch: 18 }
+    ];
+}
+
+function insertarGraficoEnPdf(doc, id, x, y, ancho) {
+    const canvas = document.getElementById(id);
+    const datos = canvas.toDataURL("image/png", 1);
+    const alto = ancho * canvas.height / canvas.width;
+    doc.addImage(datos, "PNG", x, y, ancho, alto);
+}
 
 function obtenerUltimaSimulacion() {
     if (!Array.isArray(window.ULTIMA_SIMULACION) || window.ULTIMA_SIMULACION.length === 0) {

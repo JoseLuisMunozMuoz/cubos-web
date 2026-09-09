@@ -94,6 +94,8 @@ function dibujarGraficoC1C2(lista) {
             ]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: false,
             animation: {
                 duration: 1200,
                 easing: 'easeOutQuart'
@@ -216,6 +218,8 @@ function dibujarGraficoC3(lista) {
             ]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: false,
             animation: {
                 duration: 1200,
                 easing: 'easeOutQuart'

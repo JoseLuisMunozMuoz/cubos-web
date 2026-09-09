@@ -5,6 +5,7 @@
     <title>Cubos IF</title>
 
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="icon" type="image/png" href="assets/icons/trescubosicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -15,16 +16,41 @@
 
 <body>
 
-<h1>Simulación Cubos IF</h1>
+<header class="hero">
+    <div class="hero-content">
+        <div class="brand-lockup">
+            <img src="assets/icons/trescubosicon.png" alt="" class="brand-icon">
+            <span>Herramienta de planificación financiera</span>
+        </div>
+        <h1>Simulación Tres Cubos</h1>
+        <p class="hero-lead">Proyecta la evolución de tu liquidez, renta fija y renta variable con una simulación mensual clara y configurable.</p>
+        <div class="hero-description">
+            <p>El modelo organiza el patrimonio en tres niveles de disponibilidad:</p>
+            <ul>
+                <li><strong>Cubo 1:</strong> cubre los retiros mensuales y recibe aportes externos.</li>
+                <li><strong>Cubo 2:</strong> actúa como reserva intermedia y puede reforzar el Cubo 1.</li>
+                <li><strong>Cubo 3:</strong> representa la inversión a largo plazo y puede reforzar el Cubo 2.</li>
+            </ul>
+            <p>La simulación aplica inflación, rentabilidades anuales y rebalanceos automáticos para mostrar cuánto dura cada reserva.</p>
+        </div>
+        <div class="hero-features">
+            <span>Retiros ajustados por inflación</span>
+            <span>Rebalanceos automáticos</span>
+            <span>Resultados exportables</span>
+        </div>
+    </div>
+    <div class="hero-media">
+        <img src="assets/img/trescubosimg.png" alt="Esquema de los tres cubos financieros">
+    </div>
+</header>
 
-<div id="modoOscuroToggle">
-    <label class="switch">
-        <input type="checkbox" id="darkModeSwitch">
-        <span class="slider"></span>
-    </label>
-    <span class="modo-texto">Modo oscuro</span>
-</div>
-
+<main class="workspace">
+<section class="panel parametros-panel" aria-labelledby="parametros-title">
+    <div class="section-heading">
+        <span class="eyebrow">Configuración</span>
+        <h2 id="parametros-title">Parámetros de entrada</h2>
+        <p>Define el escenario que quieres analizar.</p>
+    </div>
 <div id="formulario">
     <label data-tooltip="Año en el que comienza la simulación. Se usa para calcular el año real de cada mes.">
     Año inicial:
@@ -62,7 +88,7 @@
     </label>
 </div>
 
-<label data-tooltip="Inflación anual aplicada al retiro mensual. Ejemplo: 0.04 = 4%.">
+<label data-tooltip="Inflación anual aplicada al retiro mensual. Ejemplo: 0,04 = 4%.">
     Inflación anual:
 </label>
 <input id="inflacion" type="number" step="0.01" value="0.04">
@@ -88,28 +114,45 @@
 <input id="rentabC3" type="text" value="0,0073;0,0418;0,0316;-0,0907;0,1368;-0,0081;0,2110;0,0263;0,1308;0,0738;0,1694;0,0799">
 
 
-    <button id="btnSimular">Simular</button>
+    <button id="btnSimular">Ejecutar simulación</button>
 </div>
+</section>
 
-<hr>
-
-<h2>Gráficos</h2>
-
-<div class="panel-graficos">
-    <canvas id="graficoC1C2"></canvas>
-    <canvas id="graficoC3"></canvas>
-</div>
-
-<!-- Eliminado gráfico Pie -->
-<!--h2>Distribución final</h2>
-<canvas id="graficoPie"></canvas-->
-
-<h2>Resultados</h2>
+<section id="resultadosPanel" class="panel resultados-panel" aria-labelledby="resultados-title" hidden>
+<div class="section-heading resultados-heading">
+    <div>
+        <span class="eyebrow">Salida del escenario</span>
+        <h2 id="resultados-title">Resultados</h2>
+    </div>
 <div id="exportButtons">
     <button id="btnExcel">📊 Exportar a Excel</button>
     <button id="btnPDF">📄 Exportar a PDF</button>
 </div>
-<table id="tablaResultados"></table>
+</div>
+<div class="tabla-wrap">
+    <table id="tablaResultados"></table>
+</div>
+</section>
+
+<section id="graficosPanel" class="panel graficos-panel" aria-labelledby="graficos-title" hidden>
+<div class="charts-heading">
+    <span class="eyebrow">Evolución mensual</span>
+    <h2 id="graficos-title">Gráficas</h2>
+</div>
+<div class="panel-graficos">
+    <div class="chart-card">
+        <span class="chart-label">Cubo 1 y Cubo 2</span>
+        <canvas id="graficoC1C2"></canvas>
+    </div>
+    <div class="chart-card">
+        <span class="chart-label">Cubo 3</span>
+        <canvas id="graficoC3"></canvas>
+    </div>
+</div>
+</section>
+</main>
+
+<footer class="site-footer">Simulación Tres Cubos · Planificación financiera basada en escenarios</footer>
 
 <script src="js/utils.js"></script>
 <script src="js/modelos.js"></script>
