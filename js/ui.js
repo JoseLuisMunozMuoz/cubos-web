@@ -19,6 +19,7 @@ window.addEventListener('DOMContentLoaded', () => {
         actualizarTabla(lista);
         dibujarGraficoC1C2(lista);
         dibujarGraficoC3(lista);
+        mostrarAvisoPatrimonioNegativo(lista);
         document.getElementById('resultadosPanel').hidden = false;
         document.getElementById('graficosPanel').hidden = false;
         //dibujarPie(lista);
@@ -30,6 +31,36 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+function mostrarAvisoPatrimonioNegativo(lista) {
+    const aviso = document.getElementById('mensajePatrimonioNegativo');
+    const primerResultadoNegativo = lista.find(m => m.totalFin < 0);
+
+    if (!primerResultadoNegativo) {
+        aviso.hidden = true;
+        aviso.textContent = '';
+        return;
+    }
+
+    aviso.textContent = `El patrimonio total se vuelve negativo en ${Utils.nombreMes(((primerResultadoNegativo.mes - 1) % 12) + 1)} de ${primerResultadoNegativo.anio}.`;
+    aviso.hidden = false;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const dialog = document.getElementById('modeloDialog');
+    const abrir = document.getElementById('btnDetallesModelo');
+    const cerrar = document.getElementById('cerrarModeloDialog');
+
+    abrir.addEventListener('click', () => dialog.showModal());
+    cerrar.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('cancel', event => {
+        event.preventDefault();
+        dialog.close();
+    });
+    dialog.addEventListener('click', event => {
+        if (event.target === dialog) dialog.close();
+    });
+});
+
 function leerParametros() {
 
     const anioInicial = +document.getElementById('anioInicial').value;
@@ -38,6 +69,7 @@ function leerParametros() {
     const c3 = +document.getElementById('c3Inicial').value;
     const retiro = +document.getElementById('retiro').value;
     const aporteExterno = +document.getElementById('aporteExterno').value;
+    const anioInicioAporte = +document.getElementById('anioInicioAporte').value;
     const inflacionAporte = document.getElementById('inflacionAporte').checked;
     const inflacion = +document.getElementById('inflacion').value;
     const rentabC2 = +document.getElementById('rentabC2').value;
@@ -57,7 +89,7 @@ function leerParametros() {
     return new ParametrosSimulacion(
         anioInicial,
         c1, c2, c3,
-        retiro, aporteExterno, inflacionAporte,
+        retiro, aporteExterno, anioInicioAporte, inflacionAporte,
         inflacion,
         rentabC2,
         mesesCubrir,
@@ -70,7 +102,7 @@ function validarCampos() {
     const valores = {};
     const idsNumericos = [
         'anioInicial', 'c1Inicial', 'c2Inicial', 'c3Inicial',
-        'retiro', 'aporteExterno', 'inflacion', 'rentabC2', 'mesesCubrir', 'minimoC3'
+        'retiro', 'aporteExterno', 'anioInicioAporte', 'inflacion', 'rentabC2', 'mesesCubrir', 'minimoC3'
     ];
 
     for (const id of idsNumericos) {
@@ -94,6 +126,9 @@ function validarCampos() {
     }
     if (valores.aporteExterno < 0) {
         return 'El aporte externo mensual no puede ser negativo.';
+    }
+    if (!Number.isInteger(valores.anioInicioAporte) || valores.anioInicioAporte < valores.anioInicial) {
+        return 'El año de inicio del aporte debe ser un año entero igual o posterior al año inicial.';
     }
     if (valores.inflacion <= -1) {
         return 'La inflación debe ser mayor que -100%.';
@@ -153,10 +188,11 @@ document.getElementById("btnExcel").addEventListener("click", () => {
         mes: Utils.nombreMes(((m.mes - 1) % 12) + 1),
         cubo1: m.c1Fin,
         cubo2: m.c2Fin,
-        cubo3: m.c3Fin
+        cubo3: m.c3Fin,
+        total: m.totalFin
     }));
     const wsGraficos = XLSX.utils.json_to_sheet(datosGraficos);
-    formatearColumnasNumericas(wsGraficos, ["cubo1", "cubo2", "cubo3"]);
+    formatearColumnasNumericas(wsGraficos, ["cubo1", "cubo2", "cubo3", "total"]);
     XLSX.utils.book_append_sheet(wb, wsGraficos, "Datos graficos");
 
     XLSX.writeFile(wb, "simulacion_cubos.xlsx");
@@ -232,36 +268,81 @@ document.getElementById("btnPDF").addEventListener("click", () => {
 
     doc.autoTable({
         head: [["Parametro", "Valor"]],
-        body: parametros,
+        body: parametros.map(([nombre, valor]) => [nombre, String(valor)]),
         startY: 29,
-        tableWidth: 130,
-        styles: { fontSize: 8 },
+        margin: { left: 14, right: 14 },
+        columnStyles: { 0: { cellWidth: 78 }, 1: { cellWidth: 190 } },
+        styles: { fontSize: 9, cellPadding: 3, overflow: "linebreak" },
         headStyles: { fillColor: [77, 121, 255] }
     });
 
     doc.addPage();
     doc.setFontSize(16);
-    doc.text("Graficos de evolucion", 14, 15);
-    insertarGraficoEnPdf(doc, "graficoC1C2", 14, 24, 128);
-    insertarGraficoEnPdf(doc, "graficoC3", 154, 24, 128);
+    doc.text("Evolucion de Cubo 1 y Cubo 2", 14, 15);
+    insertarGraficoEnPdf(doc, "graficoC1C2", 14, 25, 268);
+
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.text("Evolucion de Cubo 3 y patrimonio total", 14, 15);
+    insertarGraficoEnPdf(doc, "graficoC3", 14, 25, 268);
 
     doc.addPage();
     doc.setFontSize(16);
     doc.text("Tabla completa de resultados", 14, 15);
+    const incluirAporteExterno = simulacion.some(m => m.aporteExterno !== 0);
+    const tablaPdf = crearDatosTablaPdf(simulacion, incluirAporteExterno);
     doc.autoTable({
-        html: "#tablaResultados",
+        head: [tablaPdf.headers],
+        body: tablaPdf.rows,
         startY: 22,
-        styles: { fontSize: 7 },
+        margin: { left: 8, right: 8 },
+        styles: { fontSize: 7, cellPadding: 2 },
         headStyles: { fillColor: [77, 121, 255] },
         didParseCell: function (data) {
-            if (data.section === "body" && data.cell.raw !== "" && !isNaN(data.cell.raw)) {
-                data.cell.text = formatearNumero(Number(data.cell.raw));
+            if (data.section === "body" && typeof data.cell.raw === "number") {
+                data.cell.text = formatearNumero(data.cell.raw);
+                if (data.cell.raw < 0) {
+                    data.cell.styles.textColor = [217, 83, 79];
+                    data.cell.styles.fontStyle = "bold";
+                }
             }
         }
     });
 
     doc.save("simulacion_cubos.pdf");
 });
+
+function crearDatosTablaPdf(simulacion, incluirAporteExterno) {
+    const headers = [
+        "Ano", "Mes", "Retiro mensual",
+        ...(incluirAporteExterno ? ["Aporte externo"] : []),
+        "C1 Inicio", "C1 Fin", "C2 Inicio", "C2 Fin",
+        "C3 Inicio", "C3 Fin", "Total", "Rebalanceo"
+    ];
+
+    const rows = simulacion.map(m => {
+        const rebalanceos = [];
+        if (m.rebalanceo3a2 > 0) rebalanceos.push("3 -> 2");
+        if (m.rebalanceo2a1 > 0) rebalanceos.push("2 -> 1");
+
+        return [
+            m.anio,
+            Utils.nombreMes(((m.mes - 1) % 12) + 1),
+            m.retiroMensual,
+            ...(incluirAporteExterno ? [m.aporteExterno] : []),
+            m.c1Inicio,
+            m.c1Fin,
+            m.c2Inicio,
+            m.c2Fin,
+            m.c3Inicio,
+            m.c3Fin,
+            m.totalFin,
+            rebalanceos.join(" | ")
+        ];
+    });
+
+    return { headers, rows };
+}
 
 function obtenerParametrosExportacion() {
     const nombres = [
@@ -271,6 +352,7 @@ function obtenerParametrosExportacion() {
         ["Cubo 3 inicial", "c3Inicial"],
         ["Retiro mensual inicial", "retiro"],
         ["Aporte externo mensual", "aporteExterno"],
+        ["Año inicio aporte externo", "anioInicioAporte"],
         ["Inflacion del aporte", "inflacionAporte"],
         ["Inflacion anual", "inflacion"],
         ["Rentabilidad Cubo 2", "rentabC2"],
@@ -304,6 +386,7 @@ function crearDatosResultados(simulacion, incluirAporteExterno) {
             c2Fin: m.c2Fin,
             c3Inicio: m.c3Inicio,
             c3Fin: m.c3Fin,
+            totalFin: m.totalFin,
             rebalanceo2a1: m.rebalanceo2a1,
             rebalanceo3a2: m.rebalanceo3a2
         });
@@ -335,7 +418,7 @@ function formatearColumnasNumericas(hoja, columnasNumericas) {
 function formatearHojaResultados(hoja, incluirAporteExterno) {
     const columnasNumericas = [
         "c1Inicio", "c1Fin", "c2Inicio", "c2Fin", "c3Inicio", "c3Fin",
-        "retiroMensual", "rebalanceo2a1", "rebalanceo3a2"
+        "retiroMensual", "totalFin", "rebalanceo2a1", "rebalanceo3a2"
     ];
     if (incluirAporteExterno) columnasNumericas.push("aporteExterno");
 
@@ -344,7 +427,7 @@ function formatearHojaResultados(hoja, incluirAporteExterno) {
         { wch: 10 }, { wch: 14 }, { wch: 16 },
         ...(incluirAporteExterno ? [{ wch: 16 }] : []),
         { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
-        { wch: 14 }, { wch: 14 }, { wch: 18 }
+        { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 18 }
     ];
 }
 

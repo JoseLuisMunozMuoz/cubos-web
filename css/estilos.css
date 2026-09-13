@@ -534,6 +534,41 @@ body::before {
     font-weight: 600;
 }
 
+.btn-secondary {
+    align-self: flex-start;
+    margin-top: 18px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-primary);
+    border-radius: 9px;
+    background: transparent;
+    color: var(--color-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.mensaje-alerta {
+    margin: 0 0 14px;
+    padding: 11px 14px;
+    border: 1px solid #e0a13a;
+    border-left: 4px solid #c97911;
+    border-radius: 9px;
+    background: #fff6df;
+    color: #70420b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.mensaje-alerta[hidden] {
+    display: none;
+}
+
+.btn-secondary:hover {
+    background: var(--color-primary);
+    color: #fff;
+}
+
 .workspace {
     max-width: 1380px;
     margin: 0 auto;
@@ -552,14 +587,16 @@ body::before {
 }
 
 .parametros-panel {
-    height: 1120px;
+    min-height: 1200px;
+    height: 1200px;
     box-sizing: border-box;
     overflow: visible;
     padding: 26px;
 }
 
 .resultados-panel {
-    height: 1120px;
+    min-height: 0;
+    height: 1200px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -774,6 +811,82 @@ body::before {
     text-align: center;
 }
 
+#modeloDialog {
+    width: min(680px, calc(100vw - 32px));
+    max-height: min(760px, calc(100vh - 32px));
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-panel);
+    color: var(--color-ink);
+    box-shadow: 0 24px 80px rgba(11, 41, 30, 0.28);
+}
+
+#modeloDialog::backdrop {
+    background: rgba(8, 24, 18, 0.56);
+    backdrop-filter: blur(3px);
+}
+
+.dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px 26px 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dialog-header h2 {
+    margin: 5px 0 0;
+    text-align: left;
+    color: var(--color-ink);
+}
+
+.dialog-close {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-soft);
+    color: var(--color-ink);
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.dialog-content {
+    overflow-y: auto;
+    max-height: calc(100vh - 180px);
+    padding: 22px 26px 28px;
+    color: var(--color-muted);
+    font-size: 14px;
+}
+
+.dialog-content h3 {
+    margin: 22px 0 8px;
+    color: var(--color-ink);
+    font-size: 15px;
+}
+
+.dialog-content p {
+    margin: 0 0 12px;
+}
+
+.dialog-content li {
+    margin-bottom: 8px;
+}
+
+.formula-box {
+    margin: 10px 0 16px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--color-primary);
+    background: var(--color-soft);
+    color: var(--color-ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.8;
+}
+
 @media (prefers-color-scheme: dark) {
     :root {
         --color-bg: #111a17;
@@ -807,12 +920,14 @@ body::before {
 
     .parametros-panel {
         position: static;
-        height: auto;
+        min-height: 1200px;
+        height: 1200px;
         overflow: visible;
     }
 
     .resultados-panel {
-        height: 700px;
+        height: 1200px;
+        min-height: 1200px;
     }
 
     .panel-graficos {
@@ -843,7 +958,8 @@ body::before {
     }
 
     .resultados-panel {
-        height: 640px;
+        height: 1200px;
+        min-height: 0;
     }
 
     .hero h1 {

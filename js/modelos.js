@@ -1,11 +1,12 @@
 class ParametrosSimulacion {
-    constructor(anioInicial, c1, c2, c3, retiro, aporteExterno, inflacionAporte, inflacion, rentabC2, mesesCubrir, minimoC3, rentabC3) {
+    constructor(anioInicial, c1, c2, c3, retiro, aporteExterno, anioInicioAporte, inflacionAporte, inflacion, rentabC2, mesesCubrir, minimoC3, rentabC3) {
         this.anioInicial = anioInicial;
         this.c1Inicial = c1;
         this.c2Inicial = c2;
         this.c3Inicial = c3;
         this.retiro = retiro;
         this.aporteExterno = aporteExterno;
+        this.anioInicioAporte = anioInicioAporte;
         this.inflacionAporte = inflacionAporte;
         this.inflacion = inflacion;
         this.rentabC2 = rentabC2;

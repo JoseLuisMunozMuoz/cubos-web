@@ -14,6 +14,7 @@ function actualizarTabla(lista) {
         'C1 Inicio', 'C1 Fin',
         'C2 Inicio', 'C2 Fin',
         'C3 Inicio', 'C3 Fin',
+        'Total',
         'Rebalanceo'
     ];
 
@@ -44,7 +45,8 @@ function actualizarTabla(lista) {
         let tooltip = `📅 ${Utils.nombreMes(((m.mes - 1) % 12) + 1)} ${m.anio}\n\n` +
                       `💰 Cubo 1: ${formatearNumero(m.c1Fin)} €\n` +
                       `📈 Cubo 2: ${formatearNumero(m.c2Fin)} €\n` +
-                      `📊 Cubo 3: ${formatearNumero(m.c3Fin)} €\n\n` +
+                      `📊 Cubo 3: ${formatearNumero(m.c3Fin)} €\n` +
+                      `💼 Total: ${formatearNumero(m.totalFin)} €\n\n` +
                       `🔸 Retiro mensual: ${formatearNumero(m.retiroMensual)} €\n`;
 
         if (m.aporteExterno !== 0) {
@@ -114,6 +116,11 @@ function actualizarTabla(lista) {
         tdC3Fin.textContent = formatearNumero(m.c3Fin);
         if (esNegativo(m.c3Fin)) tdC3Fin.classList.add('negativo');
         tr.appendChild(tdC3Fin);
+
+        const tdTotal = document.createElement('td');
+        tdTotal.textContent = formatearNumero(m.totalFin);
+        if (esNegativo(m.totalFin)) tdTotal.classList.add('negativo');
+        tr.appendChild(tdTotal);
 
         const tdIcono = document.createElement('td');
         let texto = '';

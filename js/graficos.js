@@ -6,7 +6,7 @@ let chartC3 = null;
 
     const ctx = document.getElementById('graficoC1C2');
 
-    const labels = lista.map(m => m.mes);
+    const labels = lista.map(m => m.anio);
     const datosC1 = lista.map(m => m.c1Fin);
     const datosC2 = lista.map(m => m.c2Fin);
 
@@ -40,10 +40,8 @@ let chartC3 = null;
                 tooltip: {
                     callbacks: {
                         title: ctx => {
-                            const mes = ctx[0].label;
-                            const mesNombre = Utils.nombreMes(((mes - 1) % 12) + 1);
-                            const anio = lista[mes - 1].anio;
-                            return `${mesNombre} ${anio}`;
+                            const registro = lista[ctx[0].dataIndex];
+                            return `${Utils.nombreMes(registro.mes)} ${registro.anio}`;
                         },
                         label: ctx => {
                             const valor = ctx.raw.toLocaleString('es-ES', { maximumFractionDigits: 0 });
@@ -60,7 +58,7 @@ function dibujarGraficoC1C2(lista) {
     const canvas = document.getElementById('graficoC1C2');
     const ctx = canvas.getContext('2d');
 
-    const labels = lista.map(m => m.mes);
+    const labels = lista.map(m => m.anio);
     const datosC1 = lista.map(m => m.c1Fin);
     const datosC2 = lista.map(m => m.c2Fin);
 
@@ -111,10 +109,8 @@ function dibujarGraficoC1C2(lista) {
                     displayColors: false,
                     callbacks: {
                         title: ctx => {
-                            const mes = ctx[0].label;
-                            const mesNombre = Utils.nombreMes(((mes - 1) % 12) + 1);
-                            const anio = lista[mes - 1].anio;
-                            return `${mesNombre} ${anio}`;
+                            const registro = lista[ctx[0].dataIndex];
+                            return `${Utils.nombreMes(((registro.mes - 1) % 12) + 1)} ${registro.anio}`;
                         },
                         label: ctx => {
                             const valor = ctx.raw.toLocaleString('es-ES', { maximumFractionDigits: 0 });
@@ -125,7 +121,7 @@ function dibujarGraficoC1C2(lista) {
                 legend: {
                     labels: {
                         font: { size: 14, weight: '600' },
-                        color: '#333'
+                        color: obtenerColorTextoGrafico()
                     }
                 }
             },
@@ -135,7 +131,8 @@ function dibujarGraficoC1C2(lista) {
                     ticks: { callback: v => v.toLocaleString('es-ES') + ' €' }
                 },
                 x: {
-                    grid: { display: false }
+                    grid: { display: false },
+                    ticks: { autoSkip: true, maxTicksLimit: 12 }
                 }
             }
         }
@@ -149,7 +146,7 @@ function dibujarGraficoC1C2(lista) {
 
     const ctx = document.getElementById('graficoC3');
 
-    const labels = lista.map(m => m.mes);
+    const labels = lista.map(m => m.anio);
     const datosC3 = lista.map(m => m.c3Fin);
 
     if (chartC3) chartC3.destroy();
@@ -174,10 +171,8 @@ function dibujarGraficoC1C2(lista) {
                 tooltip: {
                     callbacks: {
                         title: ctx => {
-                            const mes = ctx[0].label;
-                            const mesNombre = Utils.nombreMes(((mes - 1) % 12) + 1);
-                            const anio = lista[mes - 1].anio;
-                            return `${mesNombre} ${anio}`;
+                            const registro = lista[ctx[0].dataIndex];
+                            return `${Utils.nombreMes(registro.mes)} ${registro.anio}`;
                         },
                         label: ctx => {
                             const valor = ctx.raw.toLocaleString('es-ES', { maximumFractionDigits: 0 });
@@ -195,8 +190,9 @@ function dibujarGraficoC3(lista) {
     const canvas = document.getElementById('graficoC3');
     const ctx = canvas.getContext('2d');
 
-    const labels = lista.map(m => m.mes);
+    const labels = lista.map(m => m.anio);
     const datosC3 = lista.map(m => m.c3Fin);
+    const datosTotal = lista.map(m => m.totalFin);
 
     if (chartC3) chartC3.destroy();
 
@@ -214,6 +210,17 @@ function dibujarGraficoC3(lista) {
                     pointBackgroundColor: '#33cc33',
                     tension: 0.3,
                     borderWidth: 2
+                },
+                {
+                    label: 'Total',
+                    data: datosTotal,
+                    borderColor: '#14251f',
+                    backgroundColor: 'transparent',
+                    pointRadius: 3,
+                    pointBackgroundColor: '#14251f',
+                    tension: 0.3,
+                    borderWidth: 2,
+                    borderDash: [6, 4]
                 }
             ]
         },
@@ -235,21 +242,19 @@ function dibujarGraficoC3(lista) {
                     displayColors: false,
                     callbacks: {
                         title: ctx => {
-                            const mes = ctx[0].label;
-                            const mesNombre = Utils.nombreMes(((mes - 1) % 12) + 1);
-                            const anio = lista[mes - 1].anio;
-                            return `${mesNombre} ${anio}`;
+                            const registro = lista[ctx[0].dataIndex];
+                            return `${Utils.nombreMes(((registro.mes - 1) % 12) + 1)} ${registro.anio}`;
                         },
                         label: ctx => {
                             const valor = ctx.raw.toLocaleString('es-ES', { maximumFractionDigits: 0 });
-                            return `Cubo 3: ${valor} €`;
+                            return `${ctx.dataset.label}: ${valor} €`;
                         }
                     }
                 },
                 legend: {
                     labels: {
                         font: { size: 14, weight: '600' },
-                        color: '#333'
+                        color: obtenerColorTextoGrafico()
                     }
                 }
             },
@@ -259,7 +264,8 @@ function dibujarGraficoC3(lista) {
                     ticks: { callback: v => v.toLocaleString('es-ES') + ' €' }
                 },
                 x: {
-                    grid: { display: false }
+                    grid: { display: false },
+                    ticks: { autoSkip: true, maxTicksLimit: 12 }
                 }
             }
         }
@@ -272,6 +278,12 @@ function crearDegradado(ctx, color) {
     gradient.addColorStop(0, color + "cc");   // 80% opacity
     gradient.addColorStop(1, color + "00");   // transparent
     return gradient;
+}
+
+function obtenerColorTextoGrafico() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? '#ffffff'
+        : '#333333';
 }
 
 /*function dibujarPie(lista) {

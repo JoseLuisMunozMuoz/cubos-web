@@ -168,9 +168,14 @@ function simularCubos(p) {
         const c2Inicio = c2;
         const c3Inicio = c3;
 
-        const aporteExterno = p.aporteExterno * (
-            p.inflacionAporte ? Math.pow(1 + p.inflacion, anioRel - 1) : 1
-        );
+        const anioAbsoluto = p.anioInicial + anioRel - 1;
+        const aporteActivo = anioAbsoluto >= p.anioInicioAporte;
+        const aniosDesdeInicioAporte = Math.max(0, anioAbsoluto - p.anioInicioAporte);
+        const aporteExterno = aporteActivo
+            ? p.aporteExterno * (
+                p.inflacionAporte ? Math.pow(1 + p.inflacion, aniosDesdeInicioAporte) : 1
+            )
+            : 0;
         let c1PostRetiro = c1Inicio + aporteExterno - retiroMensual;
         const minCubo1 = retiroMensual * p.mesesCubrir;
 
@@ -217,15 +222,14 @@ function simularCubos(p) {
 
         const c2Fin = c2PostRentab + reb3a2;
         const c3Fin = c3PostRentab - reb3a2;
-
-        const anioAbsoluto = p.anioInicial + anioRel - 1;
+        const totalFin = c1Fin + c2Fin + c3Fin;
 
         meses.push(new MesSimulado(mes, anioAbsoluto, {
             retiroMensual, aporteExterno,
             c1Inicio, c2Inicio, c3Inicio,
             c1PostRetiro, reb2a1, c1Fin,
             c2PostReb2a1, c2PostRentab, reb3a2, c2Fin,
-            c3PostRentab, c3Fin,
+            c3PostRentab, c3Fin, totalFin,
             rentabRealC3, perdidasMayor10,
             rebalanceo2a1: reb2a1,
             rebalanceo3a2: reb3a2

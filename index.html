@@ -33,11 +33,12 @@
             </ul>
             <p>La simulación aplica inflación, rentabilidades anuales y rebalanceos automáticos para mostrar cuánto dura cada reserva.</p>
         </div>
-        <div class="hero-features">
+        <!-- div class="hero-features">
             <span>Retiros ajustados por inflación</span>
             <span>Rebalanceos automáticos</span>
             <span>Resultados exportables</span>
-        </div>
+        </div -->
+        <button id="btnDetallesModelo" class="btn-secondary" type="button">Ver detalles del modelo</button>
     </div>
     <div class="hero-media">
         <img src="assets/img/trescubosimg.png" alt="Esquema de los tres cubos financieros">
@@ -87,6 +88,10 @@
         Aplicar inflación anual
     </label>
 </div>
+<label data-tooltip="Año absoluto desde el que comienza a recibirse el aporte externo mensual.">
+    Año inicio aporte externo:
+</label>
+<input id="anioInicioAporte" type="number" value="2030">
 
 <label data-tooltip="Inflación anual aplicada al retiro mensual. Ejemplo: 0,04 = 4%.">
     Inflación anual:
@@ -111,7 +116,7 @@
 <label data-tooltip="Lista de rentabilidades anuales del Cubo 3 separadas por ';'. Una por cada año de simulación. Ejemplo para simulación de 3 años con rentabilidades 5%,-3% y 7% = 0,05;-0,03;0,07">
     Rentab. anuales Cubo 3:
 </label>
-<input id="rentabC3" type="text" value="0,0073;0,0418;0,0316;-0,0907;0,1368;-0,0081;0,2110;0,0263;0,1308;0,0738;0,1694;0,0799">
+<input id="rentabC3" type="text" value="0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06;0,06">
 
 
     <button id="btnSimular">Ejecutar simulación</button>
@@ -129,6 +134,7 @@
     <button id="btnPDF">📄 Exportar a PDF</button>
 </div>
 </div>
+<div id="mensajePatrimonioNegativo" class="mensaje-alerta" role="status" hidden></div>
 <div class="tabla-wrap">
     <table id="tablaResultados"></table>
 </div>
@@ -154,12 +160,66 @@
 
 <footer class="site-footer">Simulación Tres Cubos · Planificación financiera basada en escenarios</footer>
 
-<script src="js/utils.js"></script>
-<script src="js/modelos.js"></script>
-<script src="js/simulacion.js"></script>
-<script src="js/graficos.js"></script>
-<script src="js/tabla.js"></script>
-<script src="js/ui.js"></script>
+<dialog id="modeloDialog" aria-labelledby="modeloDialogTitle">
+    <div class="dialog-header">
+        <div>
+            <span class="eyebrow">Documentación del escenario</span>
+            <h2 id="modeloDialogTitle">Detalles del modelo de simulación</h2>
+        </div>
+        <button id="cerrarModeloDialog" class="dialog-close" type="button" aria-label="Cerrar detalles">×</button>
+    </div>
+    <div class="dialog-content">
+        <p>La estrategia divide el patrimonio en tres cubos con distintos horizontes de disponibilidad y simula su evolución mes a mes.</p>
+
+        <h3>Qué representa cada cubo</h3>
+        <ul>
+            <li><strong>Cubo 1:</strong> liquidez inmediata para cubrir los retiros. Recibe el aporte externo cuando llega el año configurado.</li>
+            <li><strong>Cubo 2:</strong> reserva intermedia. Se revaloriza anualmente y puede transferir fondos al Cubo 1.</li>
+            <li><strong>Cubo 3:</strong> inversión de largo plazo. Usa una rentabilidad independiente para cada año y puede reforzar el Cubo 2.</li>
+        </ul>
+
+        <h3>Horizonte de la simulación</h3>
+        <p>Se generan 12 meses por cada rentabilidad anual introducida para el Cubo 3. Por ejemplo, 10 tasas producen 120 registros mensuales.</p>
+
+        <h3>Flujo mensual</h3>
+        <ol>
+            <li>Se calcula el año relativo y el año absoluto del registro.</li>
+            <li>Se actualiza el retiro mensual con la inflación anual.</li>
+            <li>Se suma el aporte externo si el año actual es igual o posterior al año de inicio.</li>
+            <li>Se descuenta el retiro del Cubo 1.</li>
+            <li>En diciembre se aplican las rentabilidades y los rebalanceos necesarios.</li>
+        </ol>
+
+        <h3>Fórmulas principales</h3>
+        <div class="formula-box">
+            Retiro mensual = retiro inicial × (1 + inflación) ^ (año relativo - 1)<br>
+            Cubo 1 después del retiro = Cubo 1 inicial + aporte externo - retiro mensual<br>
+            Total = Cubo 1 final + Cubo 2 final + Cubo 3 final
+        </div>
+
+        <h3>Aplicación del aporte externo</h3>
+        <p>Antes del año de inicio, el aporte es cero. Si se activa la inflación del aporte, aumenta anualmente desde el primer año en que comienza a recibirse; si no, mantiene el importe mensual original.</p>
+
+        <h3>Reglas de rebalanceo</h3>
+        <ul>
+            <li>Solo se realizan en diciembre.</li>
+            <li>El Cubo 2 puede reforzar el Cubo 1 hasta cubrir `retiro mensual × meses a cubrir`.</li>
+            <li>El Cubo 3 puede reforzar el Cubo 2 respetando su saldo mínimo configurado.</li>
+            <li>El traspaso del Cubo 3 se bloquea cuando su pérdida anual supera el 10%.</li>
+        </ul>
+
+        <h3>Lectura de resultados</h3>
+        <p>La tabla muestra los saldos iniciales y finales, retiros, aportes, rebalanceos y el patrimonio total. La gráfica del Cubo 3 incluye también la evolución del total patrimonial.</p>
+        <p>Si el total se vuelve negativo, aparece un aviso indicando el primer mes y año en que ocurre.</p>
+    </div>
+</dialog>
+
+<script src="js/utils.js?v=20260913g"></script>
+<script src="js/modelos.js?v=20260913g"></script>
+<script src="js/simulacion.js?v=20260913g"></script>
+<script src="js/graficos.js?v=20260913g"></script>
+<script src="js/tabla.js?v=20260913g"></script>
+<script src="js/ui.js?v=20260913g"></script>
 
 </body>
 </html>

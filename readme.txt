@@ -12,16 +12,20 @@
  - Simulacion mensual de tres cubos.
  - Retiros mensuales ajustados anualmente por inflacion.
  - Aporte externo mensual al Cubo 1.
+ - Ano de inicio configurable para el aporte externo.
  - Opcion para aplicar inflacion anual al aporte externo.
  - Rentabilidad anual configurable para el Cubo 2.
  - Rentabilidad independiente para cada ano del Cubo 3.
  - Rebalanceo automatico del Cubo 2 al Cubo 1.
  - Rebalanceo automatico del Cubo 3 al Cubo 2.
  - Graficos de evolucion de los cubos mediante Chart.js.
+ - Total mensual del patrimonio, calculado como la suma de los tres cubos.
+ - Aviso cuando el patrimonio total se vuelve negativo, indicando el año y mes.
  - Tabla mensual con tooltips y senalizacion de rebalanceos.
  - Exportacion del estado completo a PDF.
  - Exportacion del modelo completo a Excel con varias hojas.
- - Modo oscuro con preferencia guardada en el navegador.
+ - Tema claro u oscuro adaptado automáticamente a la preferencia del sistema.
+ - Popup con los detalles del modelo de simulacion.
 
 
  MODELO DE SIMULACION
@@ -29,6 +33,9 @@
 
  La simulacion genera 12 meses por cada rentabilidad introducida para el
  Cubo 3. Por ejemplo, 5 rentabilidades generan 60 registros mensuales.
+
+ En cada mes se calcula tambien `totalFin`, que es la suma de `c1Fin`, `c2Fin`
+ y `c3Fin` despues de aplicar retiros, rentabilidades y rebalanceos.
 
  Cada mes se calcula:
 
@@ -66,6 +73,8 @@
  - Cubo 3 inicial: reserva de largo plazo.
  - Retiro mensual: importe inicial retirado del Cubo 1.
  - Aporte externo mensual: dinero adicional que entra cada mes en el Cubo 1.
+ - Ano inicio aporte externo: ano absoluto a partir del cual empieza a recibirse
+	 el aporte mensual.
  - Aplicar inflacion anual: aumenta el aporte externo cada ano si esta activo.
  - Inflacion anual: tasa usada para actualizar el retiro y, opcionalmente,
 	 el aporte externo. Ejemplo: `0,04` equivale al 4 por ciento.
@@ -87,7 +96,7 @@
 
 	 Ano | Mes | Retiro mensual | Aporte externo opcional |
 	 Cubo 1 Inicio | Cubo 1 Fin | Cubo 2 Inicio | Cubo 2 Fin |
-	 Cubo 3 Inicio | Cubo 3 Fin | Rebalanceo
+	Cubo 3 Inicio | Cubo 3 Fin | Total | Rebalanceo
 
  La columna de aporte externo solo aparece cuando el importe simulado es
  distinto de cero. La misma regla y el mismo orden se aplican a la hoja
@@ -97,7 +106,8 @@
 
  - `Parametros`: valores usados para ejecutar la simulacion.
  - `Resultados`: tabla mensual completa.
- - `Datos graficos`: serie mensual de los saldos finales de los tres cubos.
+ - `Datos graficos`: serie mensual de los saldos finales de los tres cubos y
+	 del total patrimonial.
 
  La exportacion a PDF genera un unico documento con una portada de parametros,
  una pagina con los dos graficos y la tabla completa de resultados con
@@ -106,6 +116,9 @@
  Es necesario ejecutar una simulacion antes de exportar. Si no existen
  resultados, la aplicacion muestra un aviso y no intenta crear el archivo.
 
+ El boton `Ver detalles del modelo` abre un popup con el flujo mensual y las
+ reglas de rebalanceo sin abandonar la pagina principal.
+
 
  ESTRUCTURA DEL PROYECTO
  -----------------------
@@ -113,7 +126,7 @@
  cubos-web/
  |-- index.html              Interfaz, formulario y carga de dependencias.
  |-- css/
- |   `-- estilos.css         Estilos generales y modo oscuro.
+ |   `-- estilos.css         Estilos generales y tema automático.
  |-- js/
  |   |-- utils.js             Utilidades compartidas, como nombreMes().
  |   |-- modelos.js           ParametrosSimulacion y MesSimulado.
