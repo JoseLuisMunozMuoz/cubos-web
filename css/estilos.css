@@ -141,6 +141,13 @@ body.dark #formulario input {
     border-color: #3a3d44;
 }
 
+body.dark #formulario select,
+body.dark #formulario textarea {
+    background: #2a2d33;
+    color: #fff;
+    border-color: #3a3d44;
+}
+
 body.dark #btnSimular {
     background: var(--color-primary);
 }
@@ -587,16 +594,16 @@ body::before {
 }
 
 .parametros-panel {
-    min-height: 1200px;
-    height: 1200px;
+    min-height: 1400px;
+    height: 1400px;
     box-sizing: border-box;
     overflow: visible;
     padding: 26px;
 }
 
 .resultados-panel {
-    min-height: 0;
-    height: 1200px;
+    min-height: 1400px;
+    height: 1400px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -652,7 +659,10 @@ body::before {
 }
 
 #formulario input[type="number"],
-#formulario input[type="text"] {
+#formulario input[type="number"],
+#formulario input[type="text"],
+#formulario select,
+#formulario textarea {
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
@@ -665,9 +675,16 @@ body::before {
     font-size: 13px;
 }
 
-#formulario input:focus {
+#formulario input:focus,
+#formulario select:focus,
+#formulario textarea:focus {
     outline: 3px solid rgba(23, 107, 83, 0.14);
     border-color: var(--color-primary);
+}
+
+#formulario textarea {
+    resize: vertical;
+    line-height: 1.5;
 }
 
 .aporte-externo-control {
@@ -961,14 +978,14 @@ body::before {
 
     .parametros-panel {
         position: static;
-        min-height: 1200px;
-        height: 1200px;
+        min-height: 1400px;
+        height: 1400px;
         overflow: visible;
     }
 
     .resultados-panel {
-        height: 1200px;
-        min-height: 1200px;
+        height: 1400px;
+        min-height: 1400px;
     }
 
     .panel-graficos {
@@ -999,8 +1016,8 @@ body::before {
     }
 
     .resultados-panel {
-        height: 1200px;
-        min-height: 0;
+        height: 1400px;
+        min-height: 1400px;
     }
 
     .hero h1 {

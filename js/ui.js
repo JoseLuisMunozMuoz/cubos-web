@@ -19,7 +19,7 @@ window.addEventListener('DOMContentLoaded', () => {
         actualizarTabla(lista);
         dibujarGraficoC1C2(lista);
         dibujarGraficoC3(lista);
-        mostrarAvisoPatrimonioNegativo(lista);
+        mostrarAvisoPatrimonioAgotado(lista);
         document.getElementById('resultadosPanel').hidden = false;
         document.getElementById('graficosPanel').hidden = false;
         //dibujarPie(lista);
@@ -31,17 +31,17 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function mostrarAvisoPatrimonioNegativo(lista) {
+function mostrarAvisoPatrimonioAgotado(lista) {
     const aviso = document.getElementById('mensajePatrimonioNegativo');
-    const primerResultadoNegativo = lista.find(m => m.totalFin < 0);
+    const primerResultadoAgotado = lista.find(m => m.totalFin === 0);
 
-    if (!primerResultadoNegativo) {
+    if (!primerResultadoAgotado) {
         aviso.hidden = true;
         aviso.textContent = '';
         return;
     }
 
-    aviso.textContent = `El patrimonio total se vuelve negativo en ${Utils.nombreMes(((primerResultadoNegativo.mes - 1) % 12) + 1)} de ${primerResultadoNegativo.anio}.`;
+    aviso.textContent = `El patrimonio total se agota en ${Utils.nombreMes(((primerResultadoAgotado.mes - 1) % 12) + 1)} de ${primerResultadoAgotado.anio}.`;
     aviso.hidden = false;
 }
 

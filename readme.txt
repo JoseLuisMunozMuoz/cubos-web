@@ -20,7 +20,7 @@
  - Rebalanceo automatico del Cubo 3 al Cubo 2.
  - Graficos de evolucion de los cubos mediante Chart.js.
  - Total mensual del patrimonio, calculado como la suma de los tres cubos.
- - Aviso cuando el patrimonio total se vuelve negativo, indicando el año y mes.
+ - Aviso cuando el patrimonio total se agota, indicando el año y mes.
  - Tabla mensual con tooltips y senalizacion de rebalanceos.
  - Exportacion del estado completo a PDF.
  - Exportacion del modelo completo a Excel con varias hojas.
@@ -52,16 +52,15 @@
 	 c1PostRetiro = c1Inicio + aporteExterno - retiroMensual
 
  Las rentabilidades y rebalanceos se aplican en diciembre:
-
  1. Se comprueba si el Cubo 1 necesita cubrir el minimo establecido por
 		`retiroMensual * mesesCubrir`.
- 2. Si es necesario, se transfiere dinero del Cubo 2 al Cubo 1.
- 3. Se aplica la rentabilidad anual del Cubo 2.
- 4. Se aplica la rentabilidad anual del Cubo 3.
- 5. Si el Cubo 2 queda por debajo de su minimo, puede recibir dinero del
-		Cubo 3, sin reducir este por debajo de `minimoC3`.
- 6. El traspaso del Cubo 3 al Cubo 2 se bloquea cuando la perdida anual del
-		Cubo 3 supera el 10 por ciento.
+ 2. Se aplica la rentabilidad anual del Cubo 2.
+ 3. Se aplica la rentabilidad anual del Cubo 3.
+ 4. Si Cubos 1 y 2 no pueden conservar los meses a cubrir, se transfiere
+		primero dinero del Cubo 3, aunque baje de `minimoC3`.
+ 5. Después se transfiere dinero del Cubo 2 al Cubo 1.
+ 6. La prioridad absoluta es mantener el Cubo 1 con saldo.
+ 7. Los cubos agotados se fijan en cero.
 
 
  PARAMETROS DE ENTRADA
@@ -83,6 +82,10 @@
  - Minimo Cubo 3: saldo minimo que se conserva en el Cubo 3.
  - Rentabilidades anuales Cubo 3: lista separada por punto y coma, una tasa
 	 por cada ano. Ejemplo: `0,05;-0,03;0,07`.
+
+ Los selectores de indice y escenario rellenan automaticamente esta lista con
+ los datos integrados en `js/escenarios-c3.js`. La lista sigue siendo editable
+ antes de ejecutar la simulacion.
 
  Las tasas negativas son validas siempre que sean superiores a -100 por ciento.
  Los saldos no pueden ser negativos, el retiro debe ser mayor que cero y debe
@@ -133,6 +136,7 @@
  |   |-- simulacion.js        Logica financiera de la simulacion.
  |   |-- graficos.js          Graficos de evolucion con Chart.js.
  |   |-- tabla.js             Tabla, formato y tooltips de resultados.
+ |   |-- escenarios-c3.js     Carga y seleccion de escenarios del Cubo 3.
  |   `-- ui.js                Eventos, validacion y exportaciones.
  `-- assets/                  Recursos estaticos adicionales.
 

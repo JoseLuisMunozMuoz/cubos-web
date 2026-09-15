@@ -82,12 +82,8 @@
  *      Cubo 2 debe tener al menos:
  *          minCubo2 = retiroMensual * mesesCubrir
  *
- *  Condiciones:
- *      - Si Cubo 2 queda por debajo del mínimo
- *      - Y Cubo 3 NO ha tenido pérdidas > 10%
- *
- *  Límite:
- *      maxTransferible = c3PostRentab - minimoC3
+ *  La prioridad de liquidez permite usar Cubo 3 por debajo de `minimoC3`
+ *  cuando Cubos 1 y 2 no pueden mantener los meses a cubrir.
  *
  *  Resultado:
  *      reb3a2 = min(necesario, maxTransferible)
@@ -106,8 +102,7 @@
  *  Se calcula también la rentabilidad REAL del año:
  *      rentabRealC3 = (c3PostRentab - c3InicioAnio) / c3InicioAnio
  *
- *  Si rentabRealC3 < -10%:
- *      → Se bloquea el rebalanceo 3 → 2
+ *  Si se agotan los fondos disponibles, los saldos de los cubos se fijan en 0.
  *
  * ============================================================
  *
@@ -180,15 +175,9 @@ function simularCubos(p) {
         const minCubo1 = retiroMensual * p.mesesCubrir;
 
         let reb2a1 = 0;
-        if (esDiciembre) {
-            const necesario = Math.max(0, minCubo1 - c1PostRetiro);
-            reb2a1 = Math.min(necesario, c2Inicio);
-        }
-        let c1Fin = c1PostRetiro + reb2a1;
+        let reb3a2 = 0;
 
-        let c2PostReb2a1 = c2Inicio - reb2a1;
-
-        let c2PostRentab = c2PostReb2a1;
+        let c2PostRentab = c2Inicio;
         if (esDiciembre) {
             c2PostRentab *= (1 + p.rentabC2);
         }
@@ -206,22 +195,43 @@ function simularCubos(p) {
             : 0;
 
         const perdidasMayor10 = rentabRealC3 < -0.10;
+        const bloqueoTraspasoC3 = perdidasMayor10 && c3PostRentab < p.minimoC3;
 
         const minCubo2 = retiroMensual * p.mesesCubrir;
-        let reb3a2 = 0;
-
-        if (esDiciembre) {
-            if (c2PostRentab === 0) {
-                reb3a2 = 0.25 * minCubo2;
-            } else if (c2PostRentab < minCubo2 && !perdidasMayor10) {
-                const necesario = minCubo2 - c2PostRentab;
-                const maxTransferible = c3PostRentab - p.minimoC3;
-                reb3a2 = Math.max(0, Math.min(necesario, maxTransferible));
-            }
+        const necesarioC1 = Math.max(0, minCubo1 - c1PostRetiro);
+        const objetivoC2 = Math.max(minCubo2, necesarioC1);
+        if (esDiciembre && c2PostRentab < objetivoC2) {
+            const necesario = objetivoC2 - c2PostRentab;
+            reb3a2 = Math.min(necesario, Math.max(0, c3PostRentab));
         }
 
-        const c2Fin = c2PostRentab + reb3a2;
-        const c3Fin = c3PostRentab - reb3a2;
+        let c2Fin = c2PostRentab + reb3a2;
+        let c3Fin = c3PostRentab - reb3a2;
+
+        if (esDiciembre) {
+            reb2a1 = Math.min(necesarioC1, Math.max(0, c2Fin));
+            c2Fin -= reb2a1;
+        }
+
+        let c1Fin = c1PostRetiro + reb2a1;
+
+        // En cualquier mes, C3 cubre primero un déficit real de C1 y C2 después.
+        if (c1Fin < 0) {
+            const necesario = -c1Fin;
+            const desdeC3 = Math.min(necesario, Math.max(0, c3Fin));
+            c3Fin -= desdeC3;
+            c1Fin += desdeC3;
+
+            const desdeC2 = Math.min(-c1Fin, Math.max(0, c2Fin));
+            c2Fin -= desdeC2;
+            c1Fin += desdeC2;
+        }
+
+        c1Fin = Math.max(0, c1Fin);
+        c2Fin = Math.max(0, c2Fin);
+        c3Fin = Math.max(0, c3Fin);
+
+        const c2PostReb2a1 = c2Inicio - reb2a1;
         const totalFin = c1Fin + c2Fin + c3Fin;
 
         meses.push(new MesSimulado(mes, anioAbsoluto, {
@@ -230,7 +240,7 @@ function simularCubos(p) {
             c1PostRetiro, reb2a1, c1Fin,
             c2PostReb2a1, c2PostRentab, reb3a2, c2Fin,
             c3PostRentab, c3Fin, totalFin,
-            rentabRealC3, perdidasMayor10,
+            rentabRealC3, perdidasMayor10, bloqueoTraspasoC3,
             rebalanceo2a1: reb2a1,
             rebalanceo3a2: reb3a2
         }));
