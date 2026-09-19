@@ -204,10 +204,10 @@ function dibujarGraficoC3(lista) {
                 {
                     label: 'Cubo 3',
                     data: datosC3,
-                    borderColor: '#33cc33',
-                    backgroundColor: crearDegradado(ctx, '#33cc33'),
+                    borderColor: '#16a34a',
+                    backgroundColor: crearDegradado(ctx, '#16a34a'),
                     pointRadius: 5,
-                    pointBackgroundColor: '#33cc33',
+                    pointBackgroundColor: '#16a34a',
                     tension: 0.3,
                     borderWidth: 2
                 },

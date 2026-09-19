@@ -56,9 +56,9 @@
 		`retiroMensual * mesesCubrir`.
  2. Se aplica la rentabilidad anual del Cubo 2.
  3. Se aplica la rentabilidad anual del Cubo 3.
- 4. Si Cubos 1 y 2 no pueden conservar los meses a cubrir, se transfiere
-		primero dinero del Cubo 3, aunque baje de `minimoC3`.
- 5. Después se transfiere dinero del Cubo 2 al Cubo 1.
+ 4. Primero se transfiere dinero del Cubo 2 al Cubo 1.
+ 5. Después, el Cubo 3 repone el Cubo 2 hasta el minimo de meses a cubrir,
+		aunque baje de `minimoC3` si es necesario.
  6. La prioridad absoluta es mantener el Cubo 1 con saldo.
  7. Los cubos agotados se fijan en cero.
 

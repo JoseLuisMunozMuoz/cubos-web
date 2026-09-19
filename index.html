@@ -195,13 +195,42 @@
         <h3>Horizonte de la simulación</h3>
         <p>Se generan 12 meses por cada rentabilidad anual introducida para el Cubo 3. Por ejemplo, 10 tasas producen 120 registros mensuales.</p>
 
+        <h3>Escenarios de rentabilidad del Cubo 3</h3>
+        <p>Los escenarios preconfigurados de rentabilidad del Cubo 3 contienen 40 tasas anuales por índice. Las medias exactas configuradas son:</p>
+        <div class="tabla-documentacion-wrap">
+            <table class="tabla-documentacion">
+                <thead>
+                    <tr>
+                        <th>Índice</th>
+                        <th>Más favorable</th>
+                        <th>Estándar</th>
+                        <th>Menos favorable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><th>S&amp;P 500</th><td>12,35%</td><td>9,35%</td><td>6,35%</td></tr>
+                    <tr><th>Dow Jones</th><td>11,20%</td><td>8,20%</td><td>5,20%</td></tr>
+                    <tr><th>Nasdaq 100</th><td>14,20%</td><td>11,20%</td><td>8,20%</td></tr>
+                    <tr><th>Euro Stoxx 50</th><td>8,20%</td><td>5,20%</td><td>2,20%</td></tr>
+                    <tr><th>Nikkei 225</th><td>5,50%</td><td>2,50%</td><td>-0,50%</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <ul>
+            <li><strong>S&amp;P 500:</strong> referencia de rendimiento secular histórico total.</li>
+            <li><strong>Dow Jones:</strong> escenario de grandes empresas industriales y de servicios estadounidenses.</li>
+            <li><strong>Nasdaq 100:</strong> escenario favorable con mayor volatilidad tecnológica.</li>
+            <li><strong>Euro Stoxx 50:</strong> crecimiento más moderado frente a los índices estadounidenses.</li>
+            <li><strong>Nikkei 225:</strong> incorpora el arrastre histórico de los mercados bajistas profundos de Japón.</li>
+        </ul>
+
         <h3>Flujo mensual</h3>
         <ol>
             <li>Se calcula el año relativo y el año absoluto del registro.</li>
             <li>Se actualiza el retiro mensual con la inflación anual.</li>
             <li>Se suma el aporte externo si el año actual es igual o posterior al año de inicio.</li>
             <li>Se descuenta el retiro del Cubo 1.</li>
-            <li>En diciembre se aplican las rentabilidades y los rebalanceos necesarios.</li>
+            <li>En diciembre se aplican las rentabilidades; primero C2 refuerza C1 y después C3 repone C2 hasta el mínimo de meses a cubrir.</li>
         </ol>
 
         <h3>Fórmulas principales</h3>
@@ -217,8 +246,8 @@
         <h3>Reglas de rebalanceo</h3>
         <ul>
             <li>Solo se realizan en diciembre.</li>
-            <li>El Cubo 2 puede reforzar el Cubo 1 hasta cubrir `retiro mensual × meses a cubrir`.</li>
-            <li>El Cubo 3 puede reforzar el Cubo 2 respetando su saldo mínimo configurado.</li>
+            <li>El Cubo 2 refuerza primero el Cubo 1 hasta cubrir `retiro mensual × meses a cubrir`.</li>
+            <li>Después, el Cubo 3 repone el Cubo 2 hasta su mínimo de meses a cubrir.</li>
             <li>La prioridad es mantener el Cubo 1 con saldo: el Cubo 3 puede bajar de su mínimo para reforzar el Cubo 2 y, después, el Cubo 1.</li>
         </ul>
 
@@ -230,8 +259,8 @@
 
 <script src="js/utils.js?v=20260913g"></script>
 <script src="js/modelos.js?v=20260913g"></script>
-<script src="js/simulacion.js?v=20260915d"></script>
-<script src="js/graficos.js?v=20260913g"></script>
+<script src="js/simulacion.js?v=20260919b"></script>
+<script src="js/graficos.js?v=20260919a"></script>
 <script src="js/tabla.js?v=20260913g"></script>
 <script src="js/escenarios-c3.js?v=20260915a"></script>
 <script src="js/ui.js?v=20260915e"></script>

@@ -53,7 +53,11 @@ function actualizarTabla(lista) {
             tooltip += `🔸 Aporte externo: ${formatearNumero(m.aporteExterno)} €\n`;
         }
 
-        tooltip += `🔸 Rentab. C3: ${(m.rentabRealC3 * 100).toFixed(2)} %\n`;
+        if (m.mes % 12 === 0) {
+            tooltip += `🔸 Rentab. anual C3 aplicada: ${(m.rentabC3Anual * 100).toFixed(2)} %\n`;
+        } else {
+            tooltip += '🔸 Rentab. C3: no aplicada este mes\n';
+        }
 
         // Tooltip específico si hay rebalanceo
         if (r21 > 0 || r32 > 0) {
